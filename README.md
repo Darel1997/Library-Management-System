@@ -4,7 +4,7 @@ A complete library management application with a clean, professional UI — book
 
 **[▶ Try it live](https://darelrodriguez.com/library/)**
 
-![Dashboard screenshot](docs/dashboard.png)
+![Dashboard screenshot](Dashboard.png)
 
 ---
 
