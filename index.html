@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Library Management System — Darel Rodriguez</title>
+<meta name="description" content="A full-stack library management system with book catalog, member management, loans, returns, and reporting. Built by Darel Rodriguez.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Top nav -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <a href="../index.html" class="brand" aria-label="Back to portfolio">
+      <i class="fas fa-arrow-left"></i>
+      <span class="brand-text">Portfolio</span>
+    </a>
+    <div class="brand-title">
+      <i class="fas fa-book-open" aria-hidden="true"></i>
+      <span>Library Management System</span>
+    </div>
+    <div class="topbar-actions">
+      <a href="LibraryManagementSystemAndStoredProceduresFINAL.sql" download class="btn-icon" title="Download the original SQL schema" aria-label="Download SQL schema">
+        <i class="fas fa-database"></i>
+        <span class="btn-icon-text">Schema</span>
+      </a>
+      <button id="btnReset" class="btn-icon" title="Reset all data to original seed" aria-label="Reset database">
+        <i class="fas fa-rotate-left"></i>
+        <span class="btn-icon-text">Reset</span>
+      </button>
+      <button id="btnTheme" class="btn-icon" title="Toggle dark mode" aria-label="Toggle dark mode">
+        <i class="fas fa-moon"></i>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- Toast area -->
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<!-- Main tabs -->
+<nav class="tabs" role="tablist" aria-label="Sections">
+  <button class="tab active" data-tab="dashboard" role="tab" aria-selected="true">
+    <i class="fas fa-chart-line" aria-hidden="true"></i> Dashboard
+  </button>
+  <button class="tab" data-tab="books" role="tab" aria-selected="false">
+    <i class="fas fa-book" aria-hidden="true"></i> Books
+  </button>
+  <button class="tab" data-tab="borrowers" role="tab" aria-selected="false">
+    <i class="fas fa-users" aria-hidden="true"></i> Borrowers
+  </button>
+  <button class="tab" data-tab="loans" role="tab" aria-selected="false">
+    <i class="fas fa-arrow-right-arrow-left" aria-hidden="true"></i> Loans
+  </button>
+  <button class="tab" data-tab="checkout" role="tab" aria-selected="false">
+    <i class="fas fa-clipboard-check" aria-hidden="true"></i> Checkout
+  </button>
+  <button class="tab" data-tab="reports" role="tab" aria-selected="false">
+    <i class="fas fa-chart-column" aria-hidden="true"></i> Reports
+  </button>
+</nav>
+
+<main class="content">
+
+  <!-- Dashboard -->
+  <section class="panel active" data-panel="dashboard" role="tabpanel">
+    <h1>Dashboard</h1>
+    <p class="section-lead">Overview of the library's activity right now.</p>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="stat-icon-wrap stat-icon-books"><i class="fas fa-book"></i></div>
+        <div class="stat-info">
+          <div class="stat-label">Total Titles</div>
+          <div class="stat-value" id="statTotalBooks">–</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-wrap stat-icon-copies"><i class="fas fa-boxes-stacked"></i></div>
+        <div class="stat-info">
+          <div class="stat-label">Copies in System</div>
+          <div class="stat-value" id="statTotalCopies">–</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-wrap stat-icon-loans"><i class="fas fa-book-open-reader"></i></div>
+        <div class="stat-info">
+          <div class="stat-label">Active Loans</div>
+          <div class="stat-value" id="statActiveLoans">–</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-wrap stat-icon-overdue"><i class="fas fa-triangle-exclamation"></i></div>
+        <div class="stat-info">
+          <div class="stat-label">Overdue</div>
+          <div class="stat-value" id="statOverdue">–</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-wrap stat-icon-members"><i class="fas fa-user-group"></i></div>
+        <div class="stat-info">
+          <div class="stat-label">Members</div>
+          <div class="stat-value" id="statBorrowers">–</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon-wrap stat-icon-branches"><i class="fas fa-building-columns"></i></div>
+        <div class="stat-info">
+          <div class="stat-label">Branches</div>
+          <div class="stat-value" id="statBranches">–</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dashboard-grid">
+      <div class="card">
+        <div class="card-header">
+          <h2><i class="fas fa-chart-simple"></i> Loans by Branch</h2>
+        </div>
+        <div class="card-body" id="chartBranch"></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h2><i class="fas fa-clock"></i> Recent Activity</h2>
+        </div>
+        <div class="card-body" id="recentActivity"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Books -->
+  <section class="panel" data-panel="books" role="tabpanel">
+    <h1>Books</h1>
+    <p class="section-lead">Browse the full catalog. Click any row for details, copies at each branch, and loan history.</p>
+
+    <div class="toolbar">
+      <div class="search-wrap">
+        <i class="fas fa-magnifying-glass"></i>
+        <input type="search" id="bookSearch" placeholder="Search by title, author, or publisher..." aria-label="Search books">
+      </div>
+      <button class="btn-primary" id="btnAddBook"><i class="fas fa-plus"></i> Add Book</button>
+    </div>
+
+    <div class="table-wrap">
+      <table class="data-table" id="booksTable">
+        <thead>
+          <tr>
+            <th class="sortable" data-col="id" data-type="num">ID <i class="sort-icon fas fa-sort"></i></th>
+            <th class="sortable" data-col="title" data-type="text">Title <i class="sort-icon fas fa-sort"></i></th>
+            <th class="sortable" data-col="author" data-type="text">Author(s) <i class="sort-icon fas fa-sort"></i></th>
+            <th class="sortable" data-col="publisher" data-type="text">Publisher <i class="sort-icon fas fa-sort"></i></th>
+            <th class="sortable" data-col="copies" data-type="num">Copies <i class="sort-icon fas fa-sort"></i></th>
+            <th class="sortable" data-col="available" data-type="num">Available <i class="sort-icon fas fa-sort"></i></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Borrowers -->
+  <section class="panel" data-panel="borrowers" role="tabpanel">
+    <h1>Borrowers</h1>
+    <p class="section-lead">Library members. Click a name to see their active loans and history.</p>
+
+    <div class="toolbar">
+      <div class="search-wrap">
+        <i class="fas fa-magnifying-glass"></i>
+        <input type="search" id="borrowerSearch" placeholder="Search by name, phone, or address..." aria-label="Search borrowers">
+      </div>
+      <button class="btn-primary" id="btnAddBorrower"><i class="fas fa-user-plus"></i> Add Borrower</button>
+    </div>
+
+    <div class="table-wrap">
+      <table class="data-table" id="borrowersTable">
+        <thead>
+          <tr>
+            <th class="sortable" data-col="cardNo" data-type="num">Card # <i class="sort-icon fas fa-sort"></i></th>
+            <th class="sortable" data-col="name" data-type="text">Name <i class="sort-icon fas fa-sort"></i></th>
+            <th class="sortable" data-col="phone" data-type="text">Phone <i class="sort-icon fas fa-sort"></i></th>
+            <th class="sortable" data-col="address" data-type="text">Address <i class="sort-icon fas fa-sort"></i></th>
+            <th class="sortable" data-col="active" data-type="num">Active Loans <i class="sort-icon fas fa-sort"></i></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Loans -->
+  <section class="panel" data-panel="loans" role="tabpanel">
+    <h1>Loans</h1>
+    <p class="section-lead">All active loans across every branch. Click Return to check a book back in.</p>
+
+    <div class="toolbar">
+      <div class="search-wrap">
+        <i class="fas fa-magnifying-glass"></i>
+        <input type="search" id="loanSearch" placeholder="Search by book, borrower, or branch..." aria-label="Search loans">
+      </div>
+      <div class="filter-group" role="group" aria-label="Filter loans">
+        <button class="filter-chip active" data-filter="all">All</button>
+        <button class="filter-chip" data-filter="active">Active</button>
+        <button class="filter-chip" data-filter="overdue">Overdue</button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="data-table" id="loansTable">
+        <thead>
+          <tr>
+            <th class="sortable" data-col="book" data-type="text">Book <i class="sort-icon fas fa-sort"></i></th>
+            <th class="sortable" data-col="borrower" data-type="text">Borrower <i class="sort-icon fas fa-sort"></i></th>
+            <th class="sortable" data-col="branch" data-type="text">Branch <i class="sort-icon fas fa-sort"></i></th>
+            <th class="sortable" data-col="dateOut" data-type="date">Checked Out <i class="sort-icon fas fa-sort"></i></th>
+            <th class="sortable" data-col="dueDate" data-type="date">Due <i class="sort-icon fas fa-sort"></i></th>
+            <th class="sortable" data-col="status" data-type="text">Status <i class="sort-icon fas fa-sort"></i></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Checkout -->
+  <section class="panel" data-panel="checkout" role="tabpanel">
+    <h1>Check Out a Book</h1>
+    <p class="section-lead">Loan a book to a borrower. Loan period defaults to 30 days.</p>
+
+    <div class="checkout-form">
+      <div class="form-row">
+        <label for="coBorrower">Borrower</label>
+        <select id="coBorrower" required>
+          <option value="">Select a borrower...</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label for="coBook">Book</label>
+        <select id="coBook" required>
+          <option value="">Select a book...</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label for="coBranch">Branch</label>
+        <select id="coBranch" required>
+          <option value="">Select a branch...</option>
+        </select>
+        <div class="hint" id="coBranchHint"></div>
+      </div>
+      <div class="form-row">
+        <label for="coDays">Loan Period (days)</label>
+        <input type="number" id="coDays" min="1" max="90" value="30">
+      </div>
+      <div class="form-actions">
+        <button class="btn-primary" id="btnDoCheckout"><i class="fas fa-check"></i> Check Out</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Reports -->
+  <section class="panel" data-panel="reports" role="tabpanel">
+    <h1>Reports</h1>
+    <p class="section-lead">Analytics powered by the same queries as the original stored procedures.</p>
+
+    <div class="reports-grid">
+      <div class="card">
+        <div class="card-header">
+          <h2><i class="fas fa-fire"></i> Most-Loaned Books</h2>
+          <span class="badge">Top 5</span>
+        </div>
+        <div class="card-body" id="reportMostLoaned"></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h2><i class="fas fa-user-check"></i> Most Active Borrowers</h2>
+          <span class="badge">Top 5</span>
+        </div>
+        <div class="card-body" id="reportActiveBorrowers"></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h2><i class="fas fa-user-slash"></i> Borrowers with No Loans</h2>
+        </div>
+        <div class="card-body" id="reportNoLoans"></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h2><i class="fas fa-triangle-exclamation"></i> Overdue Loans</h2>
+        </div>
+        <div class="card-body" id="reportOverdue"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Modal for details / add forms -->
+<div id="modal" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-panel">
+    <button class="modal-close" data-close aria-label="Close">&times;</button>
+    <div class="modal-content" id="modalContent"></div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div>Built by <strong>Darel Rodriguez</strong></div>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
